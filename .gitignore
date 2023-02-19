@@ -91,4 +91,5 @@ coverage.xml
 .DS_Store
 *.png
 *.mp4
-Raw-Data/df4Xulu.csv
+Raw-Data/*.csv
+Raw-Data/*.mda
