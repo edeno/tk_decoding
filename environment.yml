@@ -1,16 +1,18 @@
-name: analysis_template
+name: tk_decoding
 channels:
 - defaults
 - conda-forge
 dependencies:
-- "python>=3.6"
+- "python>=3.9"
 - numpy
-- numba
 - scipy
 - scikit-learn
 - matplotlib
 - xarray
 - pandas
+- replay_trajectory_classification
+- ripple_detection
+- seaborn
 - dask
 - tqdm
 - statsmodels
@@ -22,3 +24,7 @@ dependencies:
 - pytest
 - pytest-cov
 - coveralls
+- black
+- pip
+- pip:
+  - sortingview
