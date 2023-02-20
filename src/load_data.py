@@ -115,7 +115,7 @@ def get_velocity(position, time=None, sigma=15, sampling_frequency=1):
     )
 
 
-def get_speed(position, time=None, sigma=15, sampling_frequency=1):
+def get_speed(position, time=None, sigma=0.100, sampling_frequency=1):
     velocity = get_velocity(
         position, time=time, sigma=sigma, sampling_frequency=sampling_frequency
     )
