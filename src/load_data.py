@@ -19,7 +19,7 @@ def load_data():
     spikes = spikes.loc[is_good_position]
 
     multiunit_firing_rate = get_multiunit_population_firing_rate(
-        multiunit=spikes.sum(axis=1).to_numpy()[:, np.newaxis],
+        multiunit=spikes.to_numpy(),
         sampling_frequency=SAMPLING_FREQUENCY,
     )
     multiunit_firing_rate = pd.DataFrame(
@@ -28,7 +28,7 @@ def load_data():
 
     multiunit_HSE_times = multiunit_HSE_detector(
         time=position_info.index.to_numpy(),
-        multiunit=spikes.sum(axis=1).to_numpy()[:, np.newaxis],
+        multiunit=spikes.to_numpy(),
         speed=position_info.speed.to_numpy(),
         sampling_frequency=SAMPLING_FREQUENCY,
     )
