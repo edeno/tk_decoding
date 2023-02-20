@@ -93,3 +93,5 @@ coverage.xml
 *.mp4
 Raw-Data/*.csv
 Raw-Data/*.mda
+*.nc
+*.pkl
