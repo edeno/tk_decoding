@@ -8,6 +8,8 @@ from scipy.ndimage import gaussian_filter1d
 
 SAMPLING_FREQUENCY = 250
 
+CM_PER_PIXEL = 1 / 3.14
+
 
 def load_data():
     position_info = get_position_info()
@@ -38,7 +40,9 @@ def load_data():
 
 
 def get_position_info():
-    position_info = pd.read_csv("../Raw-Data/position4Xulu.csv")[["x", "y"]]
+    position_info = (
+        pd.read_csv("../Raw-Data/position4Xulu.csv")[["x", "y"]] * CM_PER_PIXEL
+    )
 
     time = np.arange(len(position_info)) / SAMPLING_FREQUENCY
     position_info = position_info.set_index(pd.Index(time, name="time"))
@@ -63,7 +67,6 @@ def get_spike_times():
 
 
 def convert_spike_times_to_indicator(spike_times, time):
-
     n_time = len(time)
     n_cells = len(spike_times.index.unique())
 
