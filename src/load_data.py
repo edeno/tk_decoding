@@ -5,10 +5,7 @@ from ripple_detection import (
     multiunit_HSE_detector,
 )
 from scipy.ndimage import gaussian_filter1d
-
-SAMPLING_FREQUENCY = 250
-
-CM_PER_PIXEL = 1 / 3.14
+from src.parameters import SAMPLING_FREQUENCY, CM_PER_PIXEL
 
 
 def load_data():
