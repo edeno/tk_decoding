@@ -1,7 +1,8 @@
 name: tk_decoding
 channels:
-- defaults
 - conda-forge
+- edeno
+- defaults
 dependencies:
 - "python>=3.9"
 - numpy
