@@ -37,8 +37,13 @@ def load_data():
 
 
 def get_position_info():
-    position_info = (
-        pd.read_csv("../Raw-Data/position4Xulu.csv")[["x", "y"]] * CM_PER_PIXEL
+    position_info = pd.read_csv("../Raw-Data/position4Xulu.csv")[["x", "y"]]
+
+    # Flip y-axis and convert from pixels to cm
+    position_info = pd.DataFrame(
+        flip_y(position_info.to_numpy(), position_info.max().to_numpy()) * CM_PER_PIXEL,
+        columns=position_info.columns,
+        index=position_info.index,
     )
 
     time = np.arange(len(position_info)) / SAMPLING_FREQUENCY
@@ -120,3 +125,21 @@ def get_speed(position, time=None, sigma=0.100, sampling_frequency=1):
         position, time=time, sigma=sigma, sampling_frequency=sampling_frequency
     )
     return np.sqrt(np.sum(velocity**2, axis=1))
+
+
+def flip_y(data, frame_size):
+    """Flips the y-axis
+    Parameters
+    ----------
+    data : ndarray, shape (n_time, 2)
+    frame_size : array_like, shape (2,)
+    Returns
+    -------
+    flipped_data : ndarray, shape (n_time, 2)
+    """
+    new_data = data.copy()
+    if data.ndim > 1:
+        new_data[:, 1] = frame_size[1] - new_data[:, 1]
+    else:
+        new_data[1] = frame_size[1] - new_data[1]
+    return new_data
