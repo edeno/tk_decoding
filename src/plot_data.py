@@ -357,7 +357,7 @@ def create_interactive_2D_decoding_figurl(
                 .sel(state=state)
                 .sum(["x_position", "y_position"]),
                 dtype=np.float32,
-            ),
+            ).squeeze(),
             color=color,
             width=1,
         )
@@ -365,7 +365,7 @@ def create_interactive_2D_decoding_figurl(
     speed_view = vv.TimeseriesGraph().add_line_series(
         name="Speed [cm/s]",
         t=np.asarray(position_info.index),
-        y=np.asarray(position_info[speed_name], dtype=np.float32),
+        y=np.asarray(position_info[speed_name], dtype=np.float32).squeeze(),
         color="black",
         width=1,
     )
@@ -373,7 +373,7 @@ def create_interactive_2D_decoding_figurl(
     multiunit_firing_rate_view = vv.TimeseriesGraph().add_line_series(
         name="Multiunit Rate [spikes/s]",
         t=np.asarray(multiunit_firing_rate.index),
-        y=np.asarray(multiunit_firing_rate.squeeze(), dtype=np.float32),
+        y=np.asarray(multiunit_firing_rate, dtype=np.float32).squeeze(),
         color="black",
         width=1,
     )
