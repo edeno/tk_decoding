@@ -373,7 +373,7 @@ def create_interactive_2D_decoding_figurl(
     multiunit_firing_rate_view = vv.TimeseriesGraph().add_line_series(
         name="Multiunit Rate [spikes/s]",
         t=np.asarray(multiunit_firing_rate.index),
-        y=np.asarray(multiunit_firing_rate, dtype=np.float32),
+        y=np.asarray(multiunit_firing_rate.squeeze(), dtype=np.float32),
         color="black",
         width=1,
     )
