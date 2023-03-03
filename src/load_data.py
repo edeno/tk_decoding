@@ -8,7 +8,7 @@ from scipy.ndimage import gaussian_filter1d
 from src.parameters import SAMPLING_FREQUENCY, CM_PER_PIXEL
 
 
-def load_data():
+def load_data(position_file_name="../Raw-Data/position4Xulu.csv", spike_file_name="../Raw-Data/df4Xulu.csv"):
     position_info = get_position_info()
     spike_times = get_spike_times()
 
@@ -36,8 +36,8 @@ def load_data():
     return position_info, spikes, multiunit_firing_rate, multiunit_HSE_times
 
 
-def get_position_info():
-    position_info = pd.read_csv("../Raw-Data/position4Xulu.csv")[["x", "y"]]
+def get_position_info(file_name="../Raw-Data/position4Xulu.csv"):
+    position_info = pd.read_csv(file_name)[["x", "y"]]
 
     # Flip y-axis and convert from pixels to cm
     position_info = pd.DataFrame(
@@ -58,9 +58,9 @@ def get_position_info():
     return position_info
 
 
-def get_spike_times():
+def get_spike_times(file_name="../Raw-Data/df4Xulu.csv"):
     return (
-        pd.read_csv("../Raw-Data/df4Xulu.csv")
+        pd.read_csv(file_name)
         .loc[:, ["channel", "cluster_ID", "photometry_timestamp_250Hz"]]
         .astype(int)
         .set_index(["channel", "cluster_ID"])
