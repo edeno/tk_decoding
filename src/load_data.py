@@ -9,8 +9,8 @@ from src.parameters import SAMPLING_FREQUENCY, CM_PER_PIXEL
 
 
 def load_data(position_file_name="../Raw-Data/position4Xulu.csv", spike_file_name="../Raw-Data/df4Xulu.csv"):
-    position_info = get_position_info()
-    spike_times = get_spike_times()
+    position_info = get_position_info(position_file_name)
+    spike_times = get_spike_times(spike_file_name)
 
     spikes = convert_spike_times_to_indicator(spike_times, position_info.index)
 
