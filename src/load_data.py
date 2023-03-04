@@ -5,10 +5,14 @@ from ripple_detection import (
     multiunit_HSE_detector,
 )
 from scipy.ndimage import gaussian_filter1d
-from src.parameters import SAMPLING_FREQUENCY, CM_PER_PIXEL
+
+from src.parameters import CM_PER_PIXEL, SAMPLING_FREQUENCY
 
 
-def load_data(position_file_name="../Raw-Data/position4Xulu.csv", spike_file_name="../Raw-Data/df4Xulu.csv"):
+def load_data(
+    position_file_name="../Raw-Data/position4Xulu.csv",
+    spike_file_name="../Raw-Data/df4Xulu.csv",
+):
     position_info = get_position_info(position_file_name)
     spike_times = get_spike_times(spike_file_name)
 
