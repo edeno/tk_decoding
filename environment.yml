@@ -12,6 +12,7 @@ dependencies:
 - xarray
 - pandas
 - replay_trajectory_classification
+- trajectory_analysis_tools
 - cupy
 - ripple_detection
 - seaborn
