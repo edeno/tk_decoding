@@ -28,7 +28,7 @@ def compute_posterior_statistics(position_info, classifier, results, hpd_coverag
         np.diff(posterior.y_position)
     )
     isin_hpd = stacked_posterior >= hpd_threshold[:, np.newaxis]
-    hpd_spatial_coverage = (isin_hpd * bin_area).sum("position")
+    hpd_spatial_coverage = np.asarray((isin_hpd * bin_area).sum("position"))
 
     return (
         most_probable_decoded_position,

@@ -324,7 +324,9 @@ def create_interactive_2D_decoding_figurl(
     bin_size,
     position_name=["x", "y"],
     speed_name="speed",
+    head_direction_name="head_direction",
     posterior_type="acausal_posterior",
+    dopamine_name="green_z_scored",
     view_height=800,
 ):
     decode_view = create_2D_decode_view(
@@ -332,7 +334,7 @@ def create_interactive_2D_decoding_figurl(
         position=position_info[position_name],
         posterior=results[posterior_type].sum("state"),
         bin_size=bin_size,
-        head_dir=None,
+        head_dir=position_info[head_direction_name],
     )
 
     probability_view = vv.TimeseriesGraph()
@@ -362,6 +364,13 @@ def create_interactive_2D_decoding_figurl(
             width=1,
         )
 
+    dopamine_view = vv.TimeseriesGraph().add_line_series(
+        name="Dopamine [std]",
+        t=np.asarray(position_info.index),
+        y=np.asarray(position_info[dopamine_name], dtype=np.float32).squeeze(),
+        color="green",
+        width=1,
+    )
     speed_view = vv.TimeseriesGraph().add_line_series(
         name="Speed [cm/s]",
         t=np.asarray(position_info.index),
@@ -377,13 +386,32 @@ def create_interactive_2D_decoding_figurl(
         color="black",
         width=1,
     )
+    
+    distance_to_animal_view = vv.TimeseriesGraph().add_line_series(
+        name="Dist. to Animal [cm]",
+        t=np.asarray(results.time),
+        y=np.asarray(results.decode_distance_to_animal, dtype=np.float32).squeeze(),
+        color="black",
+        width=1,
+    )
+    
+    hpd_spatial_coverage_view = vv.TimeseriesGraph().add_line_series(
+        name="HPD Coverage [cm]",
+        t=np.asarray(results.time),
+        y=np.asarray(results.hpd_spatial_coverage, dtype=np.float32).squeeze(),
+        color="black",
+        width=1,
+    )
 
     vertical_panel1_content = [
         vv.LayoutItem(decode_view, stretch=1, title="Decode"),
     ]
 
     vertical_panel2_content = [
-        vv.LayoutItem(probability_view, stretch=1, title="Probability of State"),
+        vv.LayoutItem(probability_view, stretch=1, title="Prob. State"),
+        vv.LayoutItem(distance_to_animal_view, stretch=1, title="Dist. to Animal"),
+        vv.LayoutItem(hpd_spatial_coverage_view, stretch=1, title="HPD Coverage"),
+        vv.LayoutItem(dopamine_view, stretch=1, title="Dopamine"),
         vv.LayoutItem(speed_view, stretch=1, title="Speed"),
         vv.LayoutItem(multiunit_firing_rate_view, stretch=1, title="Multiunit"),
     ]

@@ -18,14 +18,13 @@ import cupy as cp
 import xarray as xr
 
 
-def run_decode(create_figurl=True):
+def run_decode(animal, date, create_figurl=True):
     state_names = ["continuous", "fragmented"]
 
     logging.info("Loading data...")
     (position_info, spikes, multiunit_firing_rate, multiunit_HSE_times) = load_data(
-        position_file_name="../Raw-Data/position4Xulu.csv",
-        spike_file_name="../Raw-Data/df4Xulu.csv",
-    )
+        position_file_name=f"../Raw-Data/{date}/{animal}_{date}_position.csv",
+        spike_file_name=f"../Raw-Data/{date}/{animal}_{date}_spikesWithPosition.csv")
     logging.info("Finished loading data...")
 
     # cut out first 20 s because animal is being placed on track
@@ -83,9 +82,9 @@ def run_decode(create_figurl=True):
     ) = compute_posterior_statistics(
         position_info, classifier, results, hpd_coverage=0.95
     )
-    results["most_probable_decoded_position"] = ("time", most_probable_decoded_position)
+    results["most_probable_decoded_position"] = (["time", "position"], most_probable_decoded_position)
     results["decode_distance_to_animal"] = ("time", decode_distance_to_animal)
-    results["hpd_spatial_coverage"] = ("time", hpd_spatial_coverage)
+    results["hpd_spatial_coverage"] = ("time", np.asarray(hpd_spatial_coverage))
     logging.info("Finished computing statistics...")
 
     if create_figurl:
@@ -101,19 +100,16 @@ def run_decode(create_figurl=True):
                 multiunit_firing_rate.iloc[time_slice],
                 results.isel(time=time_slice),
                 bin_size=environment.place_bin_size,
-                position_name=["x", "y"],
-                speed_name="speed",
-                posterior_type="acausal_posterior",
                 view_height=800,
             )
-            attrs["figurl_{ind}"] = view.url(label=f"Barrier 2D Decode_{ind}")
+            attrs["figurl_{ind}"] = view.url(label=f"{animal}_{date}_{ind}")
 
         results = results.assign_attrs(attrs)
         logging.info("Finished creating figurls...")
 
     results.drop(["likelihood", "causal_posterior"]).to_netcdf(
-        "../Processed-Data/results_0.nc"
+        f"../Processed-Data/{animal}_{date}_results.nc"
     )
-    classifier.save_model("../Processed-Data/classifier_0.pkl")
+    classifier.save_model(f"../Processed-Data/{animal}_{date}_classifier.pkl")
 
     logging.info("Done!")

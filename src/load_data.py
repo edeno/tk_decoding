@@ -41,23 +41,25 @@ def load_data(
 
 
 def get_position_info(file_name="../Raw-Data/position4Xulu.csv"):
-    position_info = pd.read_csv(file_name)[["x", "y"]]
+    position_info = pd.read_csv(file_name)
 
     # Flip y-axis and convert from pixels to cm
-    position_info = pd.DataFrame(
-        flip_y(position_info.to_numpy(), position_info.max().to_numpy()) * CM_PER_PIXEL,
-        columns=position_info.columns,
-        index=position_info.index,
-    )
+    position_info[["x", "y"]] = flip_y(
+        position_info[["x", "y"]].to_numpy(),
+        position_info[["x", "y"]].max().to_numpy()
+    ) * CM_PER_PIXEL
 
     time = np.arange(len(position_info)) / SAMPLING_FREQUENCY
     position_info = position_info.set_index(pd.Index(time, name="time"))
-
-    position_info["speed"] = get_speed(
-        position=position_info.to_numpy(),
+    
+    velocity = get_velocity(
+        position=position_info[["x", "y"]].to_numpy(),
         time=position_info.index.to_numpy(),
         sampling_frequency=SAMPLING_FREQUENCY,
     )
+    
+    position_info["head_direction"] = np.angle(velocity[:, 0] + 1j * velocity[:, 1])
+    position_info["speed"] = get_speed(velocity)
 
     return position_info
 
@@ -123,11 +125,7 @@ def get_velocity(position, time=None, sigma=15, sampling_frequency=1):
         truncate=8,
     )
 
-
-def get_speed(position, time=None, sigma=0.100, sampling_frequency=1):
-    velocity = get_velocity(
-        position, time=time, sigma=sigma, sampling_frequency=sampling_frequency
-    )
+def get_speed(velocity):
     return np.sqrt(np.sum(velocity**2, axis=1))
 
 
