@@ -32,6 +32,12 @@ def run_decode(animal, date, create_figurl=True):
     position_info = position_info.iloc[start_ind:]
     spikes = spikes.iloc[start_ind:]
     multiunit_firing_rate = multiunit_firing_rate.iloc[start_ind:]
+    
+    # Save out data
+    position_info.to_csv(f"../Processed-Data/{animal}_{date}_position_info.csv")
+    spikes.to_csv(f"../Processed-Data/{animal}_{date}_spikes.csv")
+    multiunit_firing_rate.to_csv(f"../Processed-Data/{animal}_{date}_multiunit_firing_rate.csv")
+    multiunit_HSE_times.to_csv(f"../Processed-Data/{animal}_{date}_multiunit_HSE_times.csv")
 
     environment = Environment(place_bin_size=2.0)
     continuous_transition_types = [
