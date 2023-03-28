@@ -18,7 +18,18 @@ import cupy as cp
 import xarray as xr
 
 
-def run_decode(animal, date, create_figurl=True):
+def run_decode(animal: str, date: str, create_figurl: bool=True):
+    """Run decoding for a given animal and date.
+
+    Parameters
+    ----------
+    animal : str
+        Name of the animal
+    date : str
+        Date animal was run
+    create_figurl : bool, optional
+        Make an interactive visualization and store in results, by default True
+    """
     state_names = ["continuous", "fragmented"]
 
     logging.info("Loading data...")
@@ -32,7 +43,7 @@ def run_decode(animal, date, create_figurl=True):
     position_info = position_info.iloc[start_ind:]
     spikes = spikes.iloc[start_ind:]
     multiunit_firing_rate = multiunit_firing_rate.iloc[start_ind:]
-    
+
     # Save out data
     position_info.to_csv(f"../Processed-Data/{animal}_{date}_position_info.csv")
     spikes.to_csv(f"../Processed-Data/{animal}_{date}_spikes.csv")
