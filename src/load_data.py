@@ -1,9 +1,7 @@
 import numpy as np
 import pandas as pd
-from ripple_detection import (
-    get_multiunit_population_firing_rate,
-    multiunit_HSE_detector,
-)
+from ripple_detection import (get_multiunit_population_firing_rate,
+                              multiunit_HSE_detector)
 from scipy.ndimage import gaussian_filter1d
 
 from src.parameters import CM_PER_PIXEL, SAMPLING_FREQUENCY
@@ -12,7 +10,23 @@ from src.parameters import CM_PER_PIXEL, SAMPLING_FREQUENCY
 def load_data(
     position_file_name="../Raw-Data/position4Xulu.csv",
     spike_file_name="../Raw-Data/df4Xulu.csv",
-):
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Loads position and spike data from csv files, and computes multiunit firing rate and
+    multiunit HSE times.
+
+    Parameters
+    ----------
+    position_file_name : str, optional
+    spike_file_name : str, optional
+
+    Returns
+    -------
+    position_info : pd.DataFrame
+    spikes : pd.DataFrame
+    multiunit_firing_rate : pd.DataFrame
+    multiunit_HSE_times : pd.DataFrame
+
+    """
     position_info = get_position_info(position_file_name)
     spike_times = get_spike_times(spike_file_name)
 
@@ -40,7 +54,18 @@ def load_data(
     return position_info, spikes, multiunit_firing_rate, multiunit_HSE_times
 
 
-def get_position_info(file_name="../Raw-Data/position4Xulu.csv"):
+def get_position_info(file_name="../Raw-Data/position4Xulu.csv") -> pd.DataFrame:
+    """Loads position information from a csv file, converts to cm, and flips the y-axis,
+    and also computes head direction and speed.
+
+    Parameters
+    ----------
+    file_name : str, optional
+
+    Returns
+    -------
+    position_info : pd.DataFrame
+    """
     position_info = pd.read_csv(file_name)
 
     # Flip y-axis and convert from pixels to cm
@@ -51,20 +76,30 @@ def get_position_info(file_name="../Raw-Data/position4Xulu.csv"):
 
     time = np.arange(len(position_info)) / SAMPLING_FREQUENCY
     position_info = position_info.set_index(pd.Index(time, name="time"))
-    
+
     velocity = get_velocity(
         position=position_info[["x", "y"]].to_numpy(),
         time=position_info.index.to_numpy(),
         sampling_frequency=SAMPLING_FREQUENCY,
     )
-    
+
     position_info["head_direction"] = np.angle(velocity[:, 0] + 1j * velocity[:, 1])
     position_info["speed"] = get_speed(velocity)
 
     return position_info
 
 
-def get_spike_times(file_name="../Raw-Data/df4Xulu.csv"):
+def get_spike_times(file_name="../Raw-Data/df4Xulu.csv") -> pd.DataFrame:
+    """Loads spike times from a csv file
+
+    Parameters
+    ----------
+    file_name : str, optional
+
+    Returns
+    -------
+    spike_times : pd.DataFrame, shape (n_spikes, 1)
+    """
     return (
         pd.read_csv(file_name)
         .loc[:, ["channel", "cluster_ID", "photometry_timestamp_250Hz"]]
@@ -74,7 +109,21 @@ def get_spike_times(file_name="../Raw-Data/df4Xulu.csv"):
     )
 
 
-def convert_spike_times_to_indicator(spike_times, time):
+def convert_spike_times_to_indicator(spike_times: pd.DataFrame, time: np.ndarray) -> pd.DataFrame:
+    """Converts spike times to a discrete indicator matrix
+
+    Parameters
+    ----------
+    spike_times : pd.DataFrame
+        Time of each spike, with columns "channel" and "cluster_ID"
+    time : np.ndarray, shape (n_time,)
+        Time bins of the indicator matrix
+
+    Returns
+    -------
+    spike_indicator : pd.DataFrame, shape (n_time, n_cells)
+        Indicator matrix of spikes
+    """
     n_time = len(time)
     n_cells = len(spike_times.index.unique())
 
@@ -91,12 +140,14 @@ def convert_spike_times_to_indicator(spike_times, time):
     return pd.DataFrame(spikes, columns=cell_ids, index=pd.Index(time, name="time"))
 
 
-def gaussian_smooth(data, sigma, sampling_frequency, axis=0, truncate=8):
+def gaussian_smooth(data, sigma, sampling_frequency, axis=0, truncate=8) -> np.ndarray:
     """1D convolution of the data with a Gaussian.
+
     The standard deviation of the gaussian is in the units of the sampling
     frequency. The function is just a wrapper around scipy's
     `gaussian_filter1d`, The support is truncated at 8 by default, instead
     of 4 in `gaussian_filter1d`
+
     Parameters
     ----------
     data : array_like
@@ -114,6 +165,22 @@ def gaussian_smooth(data, sigma, sampling_frequency, axis=0, truncate=8):
 
 
 def get_velocity(position, time=None, sigma=15, sampling_frequency=1):
+    """_summary_
+
+    Parameters
+    ----------
+    position : np.ndarray, shape (n_time, 2)
+    time : np.ndarray, shape (n_time,), optional
+    sigma : int, optional
+        smoothing parameter, by default 15
+    sampling_frequency : int, optional
+        samples per second, by default 1
+
+    Returns
+    -------
+    velocity : np.ndarray, shape (n_time, 2)
+
+    """
     if time is None:
         time = np.arange(position.shape[0])
 
@@ -126,11 +193,22 @@ def get_velocity(position, time=None, sigma=15, sampling_frequency=1):
     )
 
 def get_speed(velocity):
+    """
+
+    Parameters
+    ----------
+    velocity : np.ndarray, shape (n_time, 2)
+
+    Returns
+    -------
+    speed : np.ndarray, shape (n_time,)
+    """
     return np.sqrt(np.sum(velocity**2, axis=1))
 
 
-def flip_y(data, frame_size):
+def flip_y(data: np.ndarray, frame_size: np.ndarray):
     """Flips the y-axis
+
     Parameters
     ----------
     data : ndarray, shape (n_time, 2)
