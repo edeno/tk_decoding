@@ -96,4 +96,5 @@ coverage.xml
 *.nc
 *.pkl
 
+*.dirlock
 *.lock
