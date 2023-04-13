@@ -82,6 +82,7 @@ def run_decode(
     """
 
     try:
+        # Set up logger
         file_name = f"{animal}_{date}"
         logger = setup_logger(
             name_logfile=file_name,
@@ -125,7 +126,7 @@ def run_decode(
             )
             logger.info("Finished loading data...")
 
-            # cut out first 20 s because animal is being placed on track
+            # Cut out first 20 s because animal is being placed on track
             start_ind = int(20.0 * SAMPLING_FREQUENCY)
             position_info = position_info.iloc[start_ind:]
             spikes = spikes.iloc[start_ind:]
@@ -150,6 +151,7 @@ def run_decode(
                 )
             )
 
+            # Set up classifier
             state_names = ["continuous", "fragmented"]
             environment = Environment(place_bin_size=2.0)
             continuous_transition_types = [
@@ -168,6 +170,7 @@ def run_decode(
                 },
             )
 
+            # Decode
             n_time = len(spikes)
             n_segments = n_time // (60 * 60 * SAMPLING_FREQUENCY)  # 1 hour segments
             results = []
