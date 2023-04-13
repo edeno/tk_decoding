@@ -252,7 +252,7 @@ def get_command_line_arguments():
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--create_figurl", action="store_true")
     parser.add_argument("--animal", type=str)
-    parser.add_argument("--date", type=int)
+    parser.add_argument("--date", type=str)
 
     return parser.parse_args()
 
@@ -265,10 +265,8 @@ def get_session_info():
             os.path.join(RAW_DATA_DIR, "**/*position.csv"), recursive=True
         )
     ]
-    return (
-        pd.DataFrame(raw_data_files, columns=["animal", "date"])
-        .astype({"date": int})
-        .set_index(["animal", "date"])
+    return pd.DataFrame(raw_data_files, columns=["animal", "date"]).set_index(
+        ["animal", "date"]
     )
 
 
