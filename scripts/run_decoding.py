@@ -99,6 +99,22 @@ def run_decode(
 
         # Check if results exist
         results_filename = os.path.join(PROCESSED_DATA_DIR, f"{file_name}_results.nc")
+        classifier_filename = os.path.join(
+            PROCESSED_DATA_DIR, f"{animal}_{date}_classifier.pkl"
+        )
+        position_info_filename = os.path.join(
+            PROCESSED_DATA_DIR, f"{animal}_{date}_position_info.csv"
+        )
+        spikes_filename = os.path.join(
+            PROCESSED_DATA_DIR, f"{animal}_{date}_spikes.csv"
+        )
+        multiunit_firing_rate_filename = os.path.join(
+            PROCESSED_DATA_DIR, f"{animal}_{date}_multiunit_firing_rate.csv"
+        )
+        multiunit_HSE_times_filename = os.path.join(
+            PROCESSED_DATA_DIR,
+            f"{animal}_{date}_multiunit_HSE_times.csv",
+        )
 
         if not Path(results_filename).is_file() or overwrite:
             # Garbage collect GPU memory
@@ -109,10 +125,10 @@ def run_decode(
 
             logger.info("Loading data...")
 
-            position_file_name = os.path.join(
+            raw_position_file_name = os.path.join(
                 RAW_DATA_DIR, animal, date, f"{animal}_{date}_position.csv"
             )
-            spike_file_name = os.path.join(
+            raw_spike_file_name = os.path.join(
                 RAW_DATA_DIR, animal, date, f"{animal}_{date}_spikesWithPosition.csv"
             )
             (
@@ -121,8 +137,8 @@ def run_decode(
                 multiunit_firing_rate,
                 multiunit_HSE_times,
             ) = load_data(
-                position_file_name=position_file_name,
-                spike_file_name=spike_file_name,
+                position_file_name=raw_position_file_name,
+                spike_file_name=raw_spike_file_name,
             )
             logger.info("Finished loading data...")
 
@@ -133,23 +149,10 @@ def run_decode(
             multiunit_firing_rate = multiunit_firing_rate.iloc[start_ind:]
 
             # Save out data
-            position_info.to_csv(
-                os.path.join(PROCESSED_DATA_DIR, f"{animal}_{date}_position_info.csv")
-            )
-            spikes.to_csv(
-                os.path.join(PROCESSED_DATA_DIR, f"{animal}_{date}_spikes.csv")
-            )
-            multiunit_firing_rate.to_csv(
-                os.path.join(
-                    PROCESSED_DATA_DIR, f"{animal}_{date}_multiunit_firing_rate.csv"
-                )
-            )
-            multiunit_HSE_times.to_csv(
-                os.path.join(
-                    PROCESSED_DATA_DIR,
-                    f"{animal}_{date}_multiunit_HSE_times.csv",
-                )
-            )
+            position_info.to_csv(position_info_filename)
+            spikes.to_csv(spikes_filename)
+            multiunit_firing_rate.to_csv(multiunit_firing_rate_filename)
+            multiunit_HSE_times.to_csv(multiunit_HSE_times_filename)
 
             # Set up classifier
             state_names = ["continuous", "fragmented"]
@@ -196,52 +199,62 @@ def run_decode(
                         use_gpu=True,
                     )
                 )
-
+            logger.info("Saving decoding...")
             results = xr.concat(results, dim="time")
-            logger.info("Finished decoding...")
-
-            logger.info("Computing statistics...")
-            (
-                most_probable_decoded_position,
-                decode_distance_to_animal,
-                hpd_spatial_coverage,
-            ) = compute_posterior_statistics(
-                position_info, classifier, results, hpd_coverage=0.95
-            )
-            results["most_probable_decoded_position"] = (
-                ["time", "position"],
-                most_probable_decoded_position,
-            )
-            results["decode_distance_to_animal"] = ("time", decode_distance_to_animal)
-            results["hpd_spatial_coverage"] = ("time", np.asarray(hpd_spatial_coverage))
-            logger.info("Finished computing statistics...")
-
-            if create_figurl:
-                logger.info("Creating figurls...")
-                attrs = dict()
-                for ind in range(n_segments):
-                    time_slice = slice(
-                        ind * n_time // n_segments, (ind + 1) * n_time // n_segments
-                    )
-
-                    view = create_interactive_2D_decoding_figurl(
-                        position_info.iloc[time_slice],
-                        multiunit_firing_rate.iloc[time_slice],
-                        results.isel(time=time_slice),
-                        bin_size=environment.place_bin_size,
-                        view_height=800,
-                    )
-                    attrs["figurl_{ind}"] = view.url(label=f"{animal}_{date}_{ind}")
-                    logger.info(f"Created figurl_{ind}: {attrs['figurl_{ind}']}")
-                results = results.assign_attrs(attrs)
-                logger.info("Finished creating figurls...")
-
             results.drop(["likelihood", "causal_posterior"]).to_netcdf(results_filename)
-            classifier.save_model(
-                os.path.join(PROCESSED_DATA_DIR, f"{animal}_{date}_classifier.pkl")
-            )
+            classifier.save_model(classifier_filename)
 
-            logger.info("Done!")
+            # Garbage collect GPU memory
+            mempool = cp.get_default_memory_pool()
+            pinned_mempool = cp.get_default_pinned_memory_pool()
+            mempool.free_all_blocks()
+            pinned_mempool.free_all_blocks()
+        else:
+            logger.info("Loading existing data...")
+            results = xr.load_dataset(results_filename)
+            classifier = SortedSpikesClassifier.load_model(classifier_filename)
+            position_info = pd.read_csv(position_info_filename)
+            spikes = pd.read_csv(spikes_filename)
+            multiunit_firing_rate = pd.read_csv(multiunit_firing_rate_filename)
+            multiunit_HSE_times = pd.read_csv(multiunit_HSE_times_filename)
+
+        logger.info("Computing statistics...")
+        (
+            most_probable_decoded_position,
+            decode_distance_to_animal,
+            hpd_spatial_coverage,
+        ) = compute_posterior_statistics(
+            position_info, classifier, results, hpd_coverage=0.95
+        )
+        results["most_probable_decoded_position"] = (
+            ["time", "position"],
+            most_probable_decoded_position,
+        )
+        results["decode_distance_to_animal"] = ("time", decode_distance_to_animal)
+        results["hpd_spatial_coverage"] = ("time", np.asarray(hpd_spatial_coverage))
+        logger.info("Finished computing statistics...")
+
+        if create_figurl:
+            logger.info("Creating figurls...")
+            attrs = dict()
+            for ind in range(n_segments):
+                time_slice = slice(
+                    ind * n_time // n_segments, (ind + 1) * n_time // n_segments
+                )
+
+                view = create_interactive_2D_decoding_figurl(
+                    position_info.iloc[time_slice],
+                    multiunit_firing_rate.iloc[time_slice],
+                    results.isel(time=time_slice),
+                    bin_size=environment.place_bin_size,
+                    view_height=800,
+                )
+                attrs["figurl_{ind}"] = view.url(label=f"{animal}_{date}_{ind}")
+                logger.info(f"Created figurl_{ind}: {attrs['figurl_{ind}']}")
+            results = results.assign_attrs(attrs)
+            logger.info("Finished creating figurls...")
+
+        logger.info("Done!")
     except Exception as e:
         logger.warning(e)
 
