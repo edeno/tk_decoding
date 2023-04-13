@@ -95,3 +95,5 @@ coverage.xml
 *.mda
 *.nc
 *.pkl
+
+*.lock
