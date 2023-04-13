@@ -1,6 +1,7 @@
 name: tk_decoding
 channels:
 - conda-forge
+- nvidia
 - edeno
 - defaults
 dependencies:
@@ -17,6 +18,7 @@ dependencies:
 - ripple_detection
 - seaborn
 - dask
+- dask_cuda
 - tqdm
 - statsmodels
 - patsy
