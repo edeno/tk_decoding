@@ -279,7 +279,7 @@ def get_command_line_arguments():
 
 def get_session_info():
     """Get information about the current sessions (e.g. the animal and date)"""
-    raw_position_files = glob.glob(os.path.join(RAW_DATA_DIR, "**/*position.csv"))
+    raw_position_files = os.path.join(RAW_DATA_DIR, "**/*position.csv")
     animal_date_names = [
         os.path.basename(os.path.normpath(file_name)).split("_")[:2]
         for file_name in glob.glob(raw_position_files, recursive=True)
