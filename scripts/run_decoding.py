@@ -274,14 +274,13 @@ def get_command_line_arguments():
 
 
 def get_session_info():
-    """Get information about the current session (e.g. the animal and date)"""
-    raw_data_files = [
+    """Get information about the current sessions (e.g. the animal and date)"""
+    raw_position_files = glob.glob(os.path.join(RAW_DATA_DIR, "**/*position.csv"))
+    animal_date_names = [
         os.path.basename(os.path.normpath(file_name)).split("_")[:2]
-        for file_name in glob.glob(
-            os.path.join(RAW_DATA_DIR, "**/*position.csv"), recursive=True
-        )
+        for file_name in glob.glob(raw_position_files, recursive=True)
     ]
-    return pd.DataFrame(raw_data_files, columns=["animal", "date"]).set_index(
+    return pd.DataFrame(animal_date_names, columns=["animal", "date"]).set_index(
         ["animal", "date"]
     )
 
@@ -303,8 +302,8 @@ if __name__ == "__main__":
     session_info = get_session_info()
 
     if args.animal is not None:
-        epoch_key = args.animal, args.date
-        session_info = session_info.xs(epoch_key, drop_level=False)
+        session_key = args.animal, args.date
+        session_info = session_info.xs(session_key, drop_level=False)
         if isinstance(session_info, pd.Series):
             session_info = session_info.to_frame().T
 
