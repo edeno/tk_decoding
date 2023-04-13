@@ -172,16 +172,19 @@ def run_decode(
 
             # Decode
             n_time = len(spikes)
-            n_segments = n_time // (60 * 60 * SAMPLING_FREQUENCY)  # 1 hour segments
+            # n_segments = n_time // (60 * 60 * SAMPLING_FREQUENCY)  # 1 hour segments
+            n_segments = 2
             results = []
 
             # Fit the place fields
+            logger.info("Fitting place fields...")
             classifier.fit(
                 position=position_info[["x", "y"]],
                 spikes=spikes,
             )
 
             for ind in range(n_segments):
+                logger.info(f"Predicting segment {ind}...")
                 time_slice = slice(
                     ind * n_time // n_segments, (ind + 1) * n_time // n_segments
                 )
@@ -229,7 +232,7 @@ def run_decode(
                         view_height=800,
                     )
                     attrs["figurl_{ind}"] = view.url(label=f"{animal}_{date}_{ind}")
-
+                    logger.info(f"Created figurl_{ind}: {attrs['figurl_{ind}']}")
                 results = results.assign_attrs(attrs)
                 logger.info("Finished creating figurls...")
 
