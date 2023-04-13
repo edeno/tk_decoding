@@ -70,9 +70,9 @@ def run_decode(
     Parameters
     ----------
     animal : str
-        Name of the animal, e.g. 'JZ1'
+        Name of the animal, e.g. 'IM-1478'
     date : str
-        Date animal was run, in format YYYY-MM-DD
+        Date animal was run, in format MMDDYYYY, e.g. '07172022'
     create_figurl : bool, optional
         Make an interactive visualization and store in results, by default True
     log_directory : str, optional
