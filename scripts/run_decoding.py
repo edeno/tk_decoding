@@ -199,10 +199,10 @@ def run_decode(
                         use_gpu=True,
                     )
                 )
-            logger.info("Saving decoding...")
-            results = xr.concat(results, dim="time")
-            results.drop(["likelihood", "causal_posterior"]).to_netcdf(results_filename)
-            classifier.save_model(classifier_filename)
+            logger.info("Concatenating decoding...")
+            results = xr.concat(results, dim="time").drop(
+                ["likelihood", "causal_posterior"]
+            )
 
             # Garbage collect GPU memory
             mempool = cp.get_default_memory_pool()
@@ -253,6 +253,10 @@ def run_decode(
                 logger.info(f"Created figurl_{ind}: {attrs['figurl_{ind}']}")
             results = results.assign_attrs(attrs)
             logger.info("Finished creating figurls...")
+
+        logger.info("Saving decoding...")
+        results.to_netcdf(results_filename)
+        classifier.save_model(classifier_filename)
 
         logger.info("Done!")
     except Exception as e:
