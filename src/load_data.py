@@ -86,6 +86,7 @@ def get_position_info(file_name: str) -> pd.DataFrame:
         position=position_info[["x", "y"]].to_numpy(),
         time=position_info.index.to_numpy(),
         sampling_frequency=SAMPLING_FREQUENCY,
+        sigma=0.100,
     )
 
     position_info["head_direction"] = np.angle(velocity[:, 0] + 1j * velocity[:, 1])
@@ -178,7 +179,7 @@ def gaussian_smooth(
 
 
 def get_velocity(
-    position: np.ndarray, time=None, sigma: float = 15.0, sampling_frequency: int = 1
+    position: np.ndarray, time=None, sigma: float = 0.100, sampling_frequency: int = 1
 ) -> np.ndarray:
     """_summary_
 
