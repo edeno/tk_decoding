@@ -5,7 +5,6 @@ import sortingview.views as vv
 import sortingview.views.franklab as vvf
 import xarray as xr
 from replay_trajectory_classification.environments import get_grid, get_track_interior
-
 from ripple_detection import get_multiunit_population_firing_rate
 
 
@@ -386,7 +385,7 @@ def create_interactive_2D_decoding_figurl(
         color="black",
         width=1,
     )
-    
+
     distance_to_animal_view = vv.TimeseriesGraph().add_line_series(
         name="Dist. to Animal [cm]",
         t=np.asarray(results.time),
@@ -394,7 +393,7 @@ def create_interactive_2D_decoding_figurl(
         color="black",
         width=1,
     )
-    
+
     hpd_spatial_coverage_view = vv.TimeseriesGraph().add_line_series(
         name="HPD Coverage [cm]",
         t=np.asarray(results.time),
