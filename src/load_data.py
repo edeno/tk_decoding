@@ -10,16 +10,16 @@ from src.parameters import CM_PER_PIXEL, SAMPLING_FREQUENCY
 
 
 def load_data(
-    position_file_name: str = "../Raw-Data/position4Xulu.csv",
-    spike_file_name: str = "../Raw-Data/df4Xulu.csv",
+    position_file_name: str,
+    spike_file_name: str,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Loads position and spike data from csv files, and computes multiunit firing rate and
     multiunit HSE times.
 
     Parameters
     ----------
-    position_file_name : str, optional
-    spike_file_name : str, optional
+    position_file_name : str
+    spike_file_name : str
 
     Returns
     -------
@@ -56,13 +56,13 @@ def load_data(
     return position_info, spikes, multiunit_firing_rate, multiunit_HSE_times
 
 
-def get_position_info(file_name: str = "../Raw-Data/position4Xulu.csv") -> pd.DataFrame:
+def get_position_info(file_name: str) -> pd.DataFrame:
     """Loads position information from a csv file, converts to cm, and flips the y-axis,
     and also computes head direction and speed.
 
     Parameters
     ----------
-    file_name : str, optional
+    file_name : str
 
     Returns
     -------
@@ -94,7 +94,7 @@ def get_position_info(file_name: str = "../Raw-Data/position4Xulu.csv") -> pd.Da
     return position_info
 
 
-def get_spike_times(file_name: str = "../Raw-Data/df4Xulu.csv") -> pd.DataFrame:
+def get_spike_times(file_name: str) -> pd.DataFrame:
     """Loads spike times from a csv file
 
     Parameters

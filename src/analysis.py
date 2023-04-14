@@ -2,13 +2,20 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from replay_trajectory_classification import SortedSpikesClassifier
-from trajectory_analysis_tools import (get_2D_distance,
-                                       get_highest_posterior_threshold,
-                                       make_2D_track_graph_from_environment,
-                                       maximum_a_posteriori_estimate)
+from trajectory_analysis_tools import (
+    get_2D_distance,
+    get_highest_posterior_threshold,
+    make_2D_track_graph_from_environment,
+    maximum_a_posteriori_estimate,
+)
 
 
-def compute_posterior_statistics(position_info: pd.DataFrame, classifier: SortedSpikesClassifier, results: xr.Dataset, hpd_coverage: float=0.95) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def compute_posterior_statistics(
+    position_info: pd.DataFrame,
+    classifier: SortedSpikesClassifier,
+    results: xr.Dataset,
+    hpd_coverage: float = 0.95,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute statistics from the decoding results.
 
     Parameters
