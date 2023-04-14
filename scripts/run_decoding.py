@@ -204,6 +204,10 @@ def run_decode(
                 ["likelihood", "causal_posterior"]
             )
 
+            logger.info("Saving decoding...")
+            results.to_netcdf(results_filename)
+            classifier.save_model(classifier_filename)
+
             # Garbage collect GPU memory
             mempool = cp.get_default_memory_pool()
             pinned_mempool = cp.get_default_pinned_memory_pool()
@@ -254,9 +258,8 @@ def run_decode(
             results = results.assign_attrs(attrs)
             logger.info("Finished creating figurls...")
 
-        logger.info("Saving decoding...")
+        logger.info("Saving decoding and stats...")
         results.to_netcdf(results_filename)
-        classifier.save_model(classifier_filename)
 
         logger.info("Done!")
     except Exception as e:
