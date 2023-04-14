@@ -217,10 +217,12 @@ def run_decode(
             logger.info("Loading existing data...")
             results = xr.load_dataset(results_filename)
             classifier = SortedSpikesClassifier.load_model(classifier_filename)
-            position_info = pd.read_csv(position_info_filename)
-            spikes = pd.read_csv(spikes_filename)
-            multiunit_firing_rate = pd.read_csv(multiunit_firing_rate_filename)
-            multiunit_HSE_times = pd.read_csv(multiunit_HSE_times_filename)
+            position_info = pd.read_csv(position_info_filename, index_col=0)
+            spikes = pd.read_csv(spikes_filename, index_col=0)
+            multiunit_firing_rate = pd.read_csv(
+                multiunit_firing_rate_filename, index_col=0
+            )
+            multiunit_HSE_times = pd.read_csv(multiunit_HSE_times_filename, index_col=0)
 
         logger.info("Computing statistics...")
         (
