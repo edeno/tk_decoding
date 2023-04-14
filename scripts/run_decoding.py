@@ -297,6 +297,8 @@ if __name__ == "__main__":
     cluster = LocalCUDACluster(
         CUDA_VISIBLE_DEVICES=args.cuda_visible_devices,
         local_directory=args.local_scratch_dir,
+        memory_limit=0.95,
+        threads_per_worker=4,
     )
     client = Client(cluster)
 
