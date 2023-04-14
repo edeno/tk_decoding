@@ -1,15 +1,17 @@
 import numpy as np
 import pandas as pd
-from ripple_detection import (get_multiunit_population_firing_rate,
-                              multiunit_HSE_detector)
+from ripple_detection import (
+    get_multiunit_population_firing_rate,
+    multiunit_HSE_detector,
+)
 from scipy.ndimage import gaussian_filter1d
 
 from src.parameters import CM_PER_PIXEL, SAMPLING_FREQUENCY
 
 
 def load_data(
-    position_file_name="../Raw-Data/position4Xulu.csv",
-    spike_file_name="../Raw-Data/df4Xulu.csv",
+    position_file_name: str = "../Raw-Data/position4Xulu.csv",
+    spike_file_name: str = "../Raw-Data/df4Xulu.csv",
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Loads position and spike data from csv files, and computes multiunit firing rate and
     multiunit HSE times.
@@ -54,7 +56,7 @@ def load_data(
     return position_info, spikes, multiunit_firing_rate, multiunit_HSE_times
 
 
-def get_position_info(file_name="../Raw-Data/position4Xulu.csv") -> pd.DataFrame:
+def get_position_info(file_name: str = "../Raw-Data/position4Xulu.csv") -> pd.DataFrame:
     """Loads position information from a csv file, converts to cm, and flips the y-axis,
     and also computes head direction and speed.
 
@@ -69,10 +71,13 @@ def get_position_info(file_name="../Raw-Data/position4Xulu.csv") -> pd.DataFrame
     position_info = pd.read_csv(file_name)
 
     # Flip y-axis and convert from pixels to cm
-    position_info[["x", "y"]] = flip_y(
-        position_info[["x", "y"]].to_numpy(),
-        position_info[["x", "y"]].max().to_numpy()
-    ) * CM_PER_PIXEL
+    position_info[["x", "y"]] = (
+        flip_y(
+            position_info[["x", "y"]].to_numpy(),
+            position_info[["x", "y"]].max().to_numpy(),
+        )
+        * CM_PER_PIXEL
+    )
 
     time = np.arange(len(position_info)) / SAMPLING_FREQUENCY
     position_info = position_info.set_index(pd.Index(time, name="time"))
@@ -89,7 +94,7 @@ def get_position_info(file_name="../Raw-Data/position4Xulu.csv") -> pd.DataFrame
     return position_info
 
 
-def get_spike_times(file_name="../Raw-Data/df4Xulu.csv") -> pd.DataFrame:
+def get_spike_times(file_name: str = "../Raw-Data/df4Xulu.csv") -> pd.DataFrame:
     """Loads spike times from a csv file
 
     Parameters
@@ -109,7 +114,9 @@ def get_spike_times(file_name="../Raw-Data/df4Xulu.csv") -> pd.DataFrame:
     )
 
 
-def convert_spike_times_to_indicator(spike_times: pd.DataFrame, time: np.ndarray) -> pd.DataFrame:
+def convert_spike_times_to_indicator(
+    spike_times: pd.DataFrame, time: np.ndarray
+) -> pd.DataFrame:
     """Converts spike times to a discrete indicator matrix
 
     Parameters
@@ -140,7 +147,13 @@ def convert_spike_times_to_indicator(spike_times: pd.DataFrame, time: np.ndarray
     return pd.DataFrame(spikes, columns=cell_ids, index=pd.Index(time, name="time"))
 
 
-def gaussian_smooth(data, sigma, sampling_frequency, axis=0, truncate=8) -> np.ndarray:
+def gaussian_smooth(
+    data: np.ndarray,
+    sigma: float,
+    sampling_frequency: int,
+    axis: int = 0,
+    truncate: int = 8,
+) -> np.ndarray:
     """1D convolution of the data with a Gaussian.
 
     The standard deviation of the gaussian is in the units of the sampling
@@ -164,14 +177,16 @@ def gaussian_smooth(data, sigma, sampling_frequency, axis=0, truncate=8) -> np.n
     )
 
 
-def get_velocity(position, time=None, sigma=15, sampling_frequency=1):
+def get_velocity(
+    position: np.ndarray, time=None, sigma: float = 15.0, sampling_frequency: int = 1
+) -> np.ndarray:
     """_summary_
 
     Parameters
     ----------
     position : np.ndarray, shape (n_time, 2)
     time : np.ndarray, shape (n_time,), optional
-    sigma : int, optional
+    sigma : float, optional
         smoothing parameter, by default 15
     sampling_frequency : int, optional
         samples per second, by default 1
@@ -192,7 +207,8 @@ def get_velocity(position, time=None, sigma=15, sampling_frequency=1):
         truncate=8,
     )
 
-def get_speed(velocity):
+
+def get_speed(velocity: np.ndarray) -> np.ndarray:
     """
 
     Parameters
@@ -206,7 +222,7 @@ def get_speed(velocity):
     return np.sqrt(np.sum(velocity**2, axis=1))
 
 
-def flip_y(data: np.ndarray, frame_size: np.ndarray):
+def flip_y(data: np.ndarray, frame_size: np.ndarray) -> np.ndarray:
     """Flips the y-axis
 
     Parameters
