@@ -7,6 +7,7 @@ from trajectory_analysis_tools import (
     get_highest_posterior_threshold,
     make_2D_track_graph_from_environment,
     maximum_a_posteriori_estimate,
+    get_ahead_behind_distance2D,
 )
 
 
@@ -44,6 +45,13 @@ def compute_posterior_statistics(
         track_graph=track_graph,
     )
 
+    ahead_behind_distance = get_ahead_behind_distance2D(
+        head_position=position_info[["x", "y"]].to_numpy(),
+        head_direction=position_info["head_direction"].to_numpy(),
+        map_position=np.asarray(most_probable_decoded_position),
+        track_graph=track_graph
+    )
+
     hpd_threshold = get_highest_posterior_threshold(posterior, hpd_coverage)
     stacked_posterior = posterior.stack(position=["x_position", "y_position"]).dropna(
         "position"
@@ -57,5 +65,6 @@ def compute_posterior_statistics(
     return (
         most_probable_decoded_position,
         decode_distance_to_animal,
+        ahead_behind_distance,
         hpd_spatial_coverage,
     )
