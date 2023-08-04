@@ -1,5 +1,6 @@
 name: tk_decoding
 channels:
+- rapidsai
 - conda-forge
 - nvidia
 - edeno
