@@ -19,7 +19,7 @@ dependencies:
 - ripple_detection
 - seaborn
 - dask
-- dask_cuda
+- dask-cuda
 - tqdm
 - statsmodels
 - patsy
