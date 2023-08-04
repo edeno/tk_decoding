@@ -3,6 +3,7 @@ channels:
 - rapidsai
 - conda-forge
 - nvidia
+- franklab
 - edeno
 - defaults
 dependencies:
