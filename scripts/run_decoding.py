@@ -307,30 +307,29 @@ if __name__ == "__main__":
         memory_limit=0.95,
         threads_per_worker=4,
     )
-    client = Client(cluster)
+    with Client(cluster) as client:
+        log_directory = os.path.join(os.getcwd(), "logs")
+        os.makedirs(log_directory, exist_ok=True)
 
-    log_directory = os.path.join(os.getcwd(), "logs")
-    os.makedirs(log_directory, exist_ok=True)
+        session_info = get_session_info()
 
-    session_info = get_session_info()
+        if args.animal is not None:
+            session_key = args.animal, args.date
+            session_info = session_info.xs(session_key, drop_level=False)
+            if isinstance(session_info, pd.Series):
+                session_info = session_info.to_frame().T
 
-    if args.animal is not None:
-        session_key = args.animal, args.date
-        session_info = session_info.xs(session_key, drop_level=False)
-        if isinstance(session_info, pd.Series):
-            session_info = session_info.to_frame().T
+        # Append the result of the computation into a results list
+        results = [
+            dask.delayed(run_decode)(
+                animal=animal,
+                date=date,
+                create_figurl=args.create_figurl,
+                log_directory=log_directory,
+                overwrite=args.overwrite,
+            )
+            for animal, date in session_info.index
+        ]
 
-    # Append the result of the computation into a results list
-    results = [
-        dask.delayed(run_decode)(
-            animal=animal,
-            date=date,
-            create_figurl=args.create_figurl,
-            log_directory=log_directory,
-            overwrite=args.overwrite,
-        )
-        for animal, date in session_info.index
-    ]
-
-    # Run `dask.compute` on the results list for the code to run
-    dask.compute(*results)
+        # Run `dask.compute` on the results list for the code to run
+        dask.compute(*results)
