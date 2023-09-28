@@ -91,6 +91,8 @@ def get_position_info(file_name: str) -> pd.DataFrame:
 
     position_info["head_direction"] = np.angle(velocity[:, 0] + 1j * velocity[:, 1])
     position_info["speed"] = get_speed(velocity)
+    position_info["velocity_x"] = velocity[:, 0]
+    position_info["velocity_y"] = velocity[:, 1]
 
     return position_info
 
