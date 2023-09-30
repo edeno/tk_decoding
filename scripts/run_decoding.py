@@ -227,7 +227,6 @@ def run_decode(
         logger.info("Computing statistics...")
         (
             most_probable_decoded_position,
-            decode_distance_to_animal,
             ahead_behind_distance,
             hpd_spatial_coverage,
         ) = compute_posterior_statistics(
@@ -237,7 +236,6 @@ def run_decode(
             ["time", "position"],
             most_probable_decoded_position,
         )
-        results["decode_distance_to_animal"] = ("time", decode_distance_to_animal)
         results["ahead_behind_distance"] = ("time", ahead_behind_distance)
         results["hpd_spatial_coverage"] = ("time", np.asarray(hpd_spatial_coverage))
         logger.info("Finished computing statistics...")
