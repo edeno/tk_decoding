@@ -252,9 +252,10 @@ def run_decode(
                     position_info.iloc[time_slice],
                     multiunit_firing_rate.iloc[time_slice],
                     results.isel(time=time_slice),
-                    bin_size=environment.place_bin_size,
+                    environment,
                     view_height=800,
                 )
+
                 attrs["figurl_{ind}"] = view.url(label=f"{animal}_{date}_{ind}")
                 logger.info(f"Created figurl_{ind}: {attrs['figurl_{ind}']}")
             results = results.assign_attrs(attrs)
