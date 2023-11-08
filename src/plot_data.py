@@ -57,10 +57,12 @@ def get_base_track_information(base_probabilities: xr.Dataset):
     x_min = np.min(base_probabilities.x_position).item()
     y_min = np.min(base_probabilities.y_position).item()
     x_width = round(
-        (np.max(base_probabilities.x_position).item() - x_min) / (x_count - 1), 6
+        (np.max(base_probabilities.x_position).item() - x_min) / (x_count - 1),
+        6,
     )
     y_width = round(
-        (np.max(base_probabilities.y_position).item() - y_min) / (y_count - 1), 6
+        (np.max(base_probabilities.y_position).item() - y_min) / (y_count - 1),
+        6,
     )
     return (x_count, x_min, x_width, y_count, y_min, y_width)
 
@@ -143,9 +145,14 @@ def process_decoded_data(posterior: xr.DataArray):
     frame_step_size = 100_000
     location_lookup = {}
 
-    (x_count, x_min, x_width, y_count, y_min, y_width) = get_base_track_information(
-        posterior
-    )
+    (
+        x_count,
+        x_min,
+        x_width,
+        y_count,
+        y_min,
+        y_width,
+    ) = get_base_track_information(posterior)
     location_fn = generate_linearization_function(
         location_lookup, x_count, x_min, x_width, y_min, y_width
     )
@@ -273,8 +280,9 @@ def make_track(position, bin_size: float = 1.0):
 def create_2D_decode_view(
     position_time: np.ndarray,
     position: np.ndarray,
+    interior_place_bin_centers: np.ndarray,
+    place_bin_size: np.ndarray,
     posterior: xr.DataArray,
-    bin_size: float,
     head_dir: np.ndarray = None,
 ) -> vvf.TrackPositionAnimationV1:
     """Creates a 2D decoding movie view
@@ -283,8 +291,9 @@ def create_2D_decode_view(
     ----------
     position_time : np.ndarray, shape (n_time,)
     position : np.ndarray, shape (n_time, 2)
+    interior_place_bin_centers: np.ndarray, shape (n_track_bins, 2)
+    place_bin_size : np.ndarray, shape (2, 1)
     posterior : xr.DataArray, shape (n_time, n_position_bins)
-    bin_size : float
     head_dir : np.ndarray, optional
 
     Returns
@@ -292,19 +301,29 @@ def create_2D_decode_view(
     view : vvf.TrackPositionAnimationV1
 
     """
+    assert (
+        position_time.shape[0] == position.shape[0]
+    ), "position_time and position must have the same length"
+    assert (
+        posterior.shape[0] == position.shape[0]
+    ), "posterior and position must have the same length"
+
     position_time = np.squeeze(np.asarray(position_time)).copy()
     position = np.asarray(position)
     if head_dir is not None:
         head_dir = np.squeeze(np.asarray(head_dir))
 
-    track_width, track_height, upper_left_points = make_track(
-        position, bin_size=bin_size
+    track_bin_width, track_bin_height = place_bin_size
+    # NOTE: We expect caller to have converted from fortran ordering already
+    # i.e. somewhere upstream, centers = env.place_bin_centers_[env.is_track_interior_.ravel(order="F")]
+    upper_left_points = get_ul_corners(
+        track_bin_width, track_bin_height, interior_place_bin_centers
     )
 
     data = create_static_track_animation(
         ul_corners=upper_left_points,
-        track_rect_height=track_height,
-        track_rect_width=track_width,
+        track_rect_height=track_bin_height,
+        track_rect_width=track_bin_width,
         timestamps=position_time,
         positions=position.T,
         head_dir=head_dir,
@@ -319,7 +338,7 @@ def create_interactive_2D_decoding_figurl(
     position_info,
     multiunit_firing_rate,
     results,
-    bin_size,
+    environment,
     position_name=["x", "y"],
     speed_name="speed",
     head_direction_name="head_direction",
@@ -327,11 +346,15 @@ def create_interactive_2D_decoding_figurl(
     dopamine_name="green_z_scored",
     view_height=800,
 ):
+    place_bin_size = [np.median(np.diff(e)) for e in environment.edges_]
     decode_view = create_2D_decode_view(
         position_time=position_info.index,
         position=position_info[position_name],
+        interior_place_bin_centers=environment.place_bin_centers_[
+            environment.is_track_interior_.ravel(order="F")
+        ],
         posterior=results[posterior_type].sum("state"),
-        bin_size=bin_size,
+        place_bin_size=place_bin_size,
         head_dir=position_info[head_direction_name],
     )
 
