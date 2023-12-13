@@ -26,7 +26,6 @@ dependencies:
 - patsy
 - jupyter
 - jupyterlab
-- nb_conda
 - setuptools
 - pytest
 - pytest-cov
