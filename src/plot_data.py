@@ -460,3 +460,15 @@ def create_interactive_2D_decoding_figurl(
     )
 
     return view
+
+
+def draw_hex(x, y, radius=5.5, color="black", ax=None, **kwargs):
+    """Draw a hexagon centered at x, y with the given size and color."""
+    if ax is None:
+        ax = plt.gca()
+    # Calculate the angles and the coordinates of the vertices
+    theta = np.linspace(0, 2 * np.pi, 7)
+
+    ax.plot(
+        x + radius * np.cos(theta), y + radius * np.sin(theta), color=color, **kwargs
+    )
