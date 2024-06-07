@@ -7,6 +7,9 @@ from ripple_detection import (
 from scipy.ndimage import gaussian_filter1d
 
 from src.parameters import CM_PER_PIXEL, SAMPLING_FREQUENCY
+from sklearn.metrics.pairwise import paired_cosine_distances
+from track_linearization import make_track_graph as _make_track_graph
+import networkx as nx
 
 
 def load_data(
@@ -242,3 +245,126 @@ def flip_y(data: np.ndarray, frame_size: np.ndarray) -> np.ndarray:
     else:
         new_data[1] = frame_size[1] - new_data[1]
     return new_data
+
+
+def load_hex_coords(file_name: str) -> pd.DataFrame:
+    hex_coords = pd.read_csv(file_name)
+    hex_coords[["x", "y"]] = (
+        flip_y(
+            hex_coords[["x", "y"]].to_numpy(),
+            hex_coords[["x", "y"]].max().to_numpy(),
+        )
+        * CM_PER_PIXEL
+    )
+
+    return hex_coords
+
+
+def hex_occupied(
+    hex_coords: pd.DataFrame,
+    hex_label: int,
+    position_info: pd.DataFrame,
+    hex_radius: float = 5.5,
+) -> bool:
+    hex_center = hex_coords.set_index("hex_label").loc[hex_label]
+    return np.any(
+        np.linalg.norm(position_info[["x", "y"]] - hex_center[["x", "y"]], axis=1)
+        < hex_radius
+    )
+
+
+def make_track_graph(
+    position_info: pd.DataFrame, hex_coords: pd.DataFrame, hex_radius: float = 5.5
+) -> nx.Graph:
+    valid_nodes = [
+        int(row.hex_label)
+        for row in hex_coords.itertuples(index=False)
+        if hex_occupied(row.hex_label, position_info, hex_radius=hex_radius)
+    ]
+
+    edges = []
+    for hex_label, row in hex_coords.set_index("hex_label").loc[valid_nodes].iterrows():
+        for hex_label2, row2 in (
+            hex_coords.set_index("hex_label").loc[valid_nodes].iterrows()
+        ):
+            if hex_label == hex_label2:
+                continue
+            if np.linalg.norm(row[["x", "y"]] - row2[["x", "y"]]) < hex_radius * 2:
+                edges.append((int(hex_label), int(hex_label2)))
+
+    track_graph = _make_track_graph(
+        hex_coords[["x", "y"]].to_numpy(), np.array(edges) - 1
+    )
+    track_graph.remove_nodes_from(list(nx.isolates(track_graph)))
+
+    return track_graph
+
+
+def determine_if_centrifugal(
+    track_graph: nx.Graph,
+    track_segment_id: np.ndarray,
+    head_direction: np.ndarray,
+) -> np.ndarray:
+    """
+    Determine if movement direction is centrifugal based on head direction similarity.
+
+    Parameters:
+    ----------
+    track_graph : nx.Graph
+        The graph representing the track.
+    track_segment_id : np.ndarray, shape (n_time,)
+        The IDs of the track segments.
+    head_direction : np.ndarray, shape (n_time,)
+        The head direction values.
+
+    Returns:
+    -------
+    is_centrifugal : np.ndarray, shape (n_time,)
+        An array indicating whether each movement is centrifugal or not.
+    """
+    closeness_centrality = nx.centrality.closeness_centrality(
+        track_graph, distance="distance"
+    )
+    centrifugal_edges = [
+        (u, v) if closeness_centrality[u] >= closeness_centrality[v] else (v, u)
+        for u, v in track_graph.edges()
+    ]
+
+    node_positions = nx.get_node_attributes(track_graph, "pos")
+    edges = np.array(track_graph.edges())
+    edge_nodes = edges[track_segment_id]
+    edge_nodes = np.stack((edge_nodes[:, ::-1], edge_nodes), axis=-1)
+
+    dir = np.array(
+        [
+            (
+                np.array(node_positions[node1]) - np.array(node_positions[node2]),
+                np.array(node_positions[node2]) - np.array(node_positions[node1]),
+            )
+            for node1, node2 in edges
+        ]
+    )[track_segment_id]
+
+    pos_vec = np.stack(
+        [
+            np.cos(head_direction),
+            np.sin(head_direction),
+        ],
+        axis=1,
+    )
+    cos_similarity = np.stack(
+        (
+            1 - paired_cosine_distances(pos_vec, dir[:, 0]),
+            1 - paired_cosine_distances(pos_vec, dir[:, 1]),
+        ),
+        axis=1,
+    )
+    most_similar_ind = np.argmin(np.abs(1.0 - cos_similarity), axis=1)
+    edge_direction = edge_nodes[np.arange(edge_nodes.shape[0]), :, most_similar_ind]
+    # Create structured arrays
+    dtype = [("node1", edge_direction.dtype), ("node2", edge_direction.dtype)]
+    edge_direction = np.array(list(map(tuple, edge_direction)), dtype=dtype)
+
+    is_centrifugal = np.isin(edge_direction, np.array(centrifugal_edges, dtype=dtype))
+
+    return is_centrifugal, centrifugal_edges
