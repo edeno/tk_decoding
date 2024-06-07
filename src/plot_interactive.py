@@ -1,6 +1,6 @@
 import holoviews as hv
-import panel as pn
 import numpy as np
+import panel as pn
 
 
 def create_2D_decoding_plot(

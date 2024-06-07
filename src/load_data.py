@@ -1,3 +1,4 @@
+import networkx as nx
 import numpy as np
 import pandas as pd
 from ripple_detection import (
@@ -5,11 +6,10 @@ from ripple_detection import (
     multiunit_HSE_detector,
 )
 from scipy.ndimage import gaussian_filter1d
-
-from src.parameters import CM_PER_PIXEL, SAMPLING_FREQUENCY
 from sklearn.metrics.pairwise import paired_cosine_distances
 from track_linearization import make_track_graph as _make_track_graph
-import networkx as nx
+
+from src.parameters import CM_PER_PIXEL, SAMPLING_FREQUENCY
 
 
 def load_data(

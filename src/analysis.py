@@ -4,10 +4,10 @@ import xarray as xr
 from replay_trajectory_classification import SortedSpikesClassifier
 from trajectory_analysis_tools import (
     get_2D_distance,
+    get_ahead_behind_distance2D,
     get_highest_posterior_threshold,
     make_2D_track_graph_from_environment,
     maximum_a_posteriori_estimate,
-    get_ahead_behind_distance2D,
 )
 
 

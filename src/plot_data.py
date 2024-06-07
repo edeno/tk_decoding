@@ -1,5 +1,6 @@
 from typing import Callable, Dict, Tuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 import sortingview.views as vv
 import sortingview.views.franklab as vvf
@@ -34,7 +35,7 @@ def create_static_track_animation(
         "xmin": np.min(ul_corners[0]),
         "xmax": np.max(ul_corners[0]) + track_rect_width,
         "ymin": np.min(ul_corners[1]),
-        "ymax": np.max(ul_corners[1]) + track_rect_height
+        "ymax": np.max(ul_corners[1]) + track_rect_height,
         # Speed: should this be displayed?
         # TODO: Better approach for accommodating further data streams
     }
@@ -176,15 +177,15 @@ def process_decoded_data(posterior: xr.DataArray):
         observations, positions, observations_per_frame = extract_slice_data(
             base_slice, location_fn
         )
-        final_frame_bounds[
-            frames_done : frames_done + len(observations_per_frame)
-        ] = observations_per_frame
-        final_values[
-            total_observations : total_observations + len(observations)
-        ] = observations
-        final_locations[
-            total_observations : total_observations + len(observations)
-        ] = positions
+        final_frame_bounds[frames_done : frames_done + len(observations_per_frame)] = (
+            observations_per_frame
+        )
+        final_values[total_observations : total_observations + len(observations)] = (
+            observations
+        )
+        final_locations[total_observations : total_observations + len(observations)] = (
+            positions
+        )
         total_observations += len(observations)
         frames_done += frame_step_size
     # These were intentionally oversized in preallocation; trim to the number of actual values.
