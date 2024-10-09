@@ -372,8 +372,9 @@ def determine_if_centrifugal(
 
 def get_auto_linear_edge_order_spacing(
     track_graph: nx.Graph,
+    start_node = None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    linear_edge_order = list(nx.traversal.edge_bfs(track_graph, source=1))
+    linear_edge_order = list(nx.traversal.edge_bfs(track_graph, source=start_node))
     is_connected_component = ~(
         np.abs(np.array(linear_edge_order)[:-1, 1] - np.array(linear_edge_order)[1:, 0])
         > 0
